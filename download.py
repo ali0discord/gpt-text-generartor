@@ -1,25 +1,36 @@
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import os
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-def download_and_save_model(model_name, save_dir):
+# لیست مدل‌ها با مسیر ذخیره مشخص‌شده
+MODEL_LIST = {
+    "gpt2": {"path": "openai-community/gpt2", "save_dir": "./models/gpt2"},
+    "gpt2-medium": {"path": "openai-community/gpt2-medium", "save_dir": "./models/gpt2-medium"},
+    "gpt2-persian": {"path": "flax-community/gpt2-medium-persian", "save_dir": "./models/gpt2-medium-persian"},
+    "codegen": {"path": "Salesforce/codegen-350M-mono", "save_dir": "./models/codegen"}
+}
+
+def download_and_save_models():
     """
-    Download a model and tokenizer from Hugging Face and save it locally in the specified directory.
+    دانلود و ذخیره تمام مدل‌ها در مسیرهای مشخص‌شده.
     """
-    # Create the save directory if it doesn't exist
-    os.makedirs(save_dir, exist_ok=True)
+    for model_name, model_info in MODEL_LIST.items():
+        model_path = model_info["path"]  # مسیر مدل در Hugging Face
+        save_dir = model_info["save_dir"]  # مسیر ذخیره مدل
+        
+        print(f"Downloading and saving model: {model_name} to folder: {save_dir}")
+        
+        if not os.path.exists(save_dir):  # بررسی اینکه آیا فولدر ذخیره وجود دارد یا نه
+            os.makedirs(save_dir, exist_ok=True)
+            
+            # دانلود و ذخیره مدل
+            model = AutoModelForCausalLM.from_pretrained(model_path)
+            tokenizer = AutoTokenizer.from_pretrained(model_path)
+            model.save_pretrained(save_dir)
+            tokenizer.save_pretrained(save_dir)
+            
+            print(f"Model {model_name} saved to {save_dir}")
+        else:
+            print(f"Model {model_name} already exists in {save_dir}")
 
-    # Download and load the model and tokenizer
-    print(f"Downloading {model_name}...")
-    model = GPT2LMHeadModel.from_pretrained(model_name, cache_dir=save_dir)
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name, cache_dir=save_dir)
-
-    # Save the model and tokenizer locally
-    model.save_pretrained(save_dir)
-    tokenizer.save_pretrained(save_dir)
-
-    print(f"Model and tokenizer for {model_name} saved to {save_dir}.")
-
-# Example usage
-model_name = "bolbolzaban/gpt2-persian"  # You can change this to any model name, e.g., "gpt2-medium", "flax-community/gpt2-medium-persian"
-save_dir = "./models/bolbolzaban"  # Specify the local directory to save the model
-download_and_save_model(model_name, save_dir)
+if __name__ == "__main__":
+    download_and_save_models()
