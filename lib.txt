@@ -1,0 +1,8 @@
+transformers
+torch
+gradio
+datasets
+numpy
+Pillow
+scikit-learn
+wandb
