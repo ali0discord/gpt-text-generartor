@@ -1,6 +1,6 @@
-# GPT Text Generator
+# GPT Tools
 
-![interface](https://github.com/user-attachments/assets/7ed07977-0fa2-4735-8d83-36201aeea8b2)
+![GUI)](https://github.com/user-attachments/assets/6a845c99-6ecc-422f-b662-8069cb5c2324)
 
 ---
 این پروژه یک رابط کاربری گرافیکی زیبا و کاربردی برای تولید متن، کد، داستان‌های تعاملی و ارزیابی مدل‌های مختلف مانند GPT-2 و CodeGen ارائه می‌دهد. با استفاده از این ابزار می‌توانید به راحتی مدل‌های زبان طبیعی را مدیریت و از خروجی‌های آن بهره‌برداری کنید
