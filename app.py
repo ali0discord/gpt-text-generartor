@@ -113,7 +113,7 @@ create_db()
 # Interface
 with gr.Blocks() as interface:
     gr.Markdown(
-        "# **GPT-2 Text Generator**\n\n"
+        "# **GPT-2 Tools**\n\n"
         "Generate something using GPT-2 models. Select the model and adjust the parameters for optimal results."
     )
     with gr.Tabs():
