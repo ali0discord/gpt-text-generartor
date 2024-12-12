@@ -11,3 +11,4 @@ pandas
 chardet
 accelerate
 safetensors
+diffusers

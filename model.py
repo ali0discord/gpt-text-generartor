@@ -29,7 +29,8 @@ def load_model(model_name):
         elif os.path.exists(os.path.join("./models/gpt2-large", "model.safetensors")):
             model = GPT2LMHeadModel.from_pretrained("./models/gpt2-large", from_tf=False, trust_remote_code=True)
         else:
-            raise FileNotFoundError("Neither 'pytorch_model.bin' nor 'model.safetensors' found in the specified path.")
+            raise FileNotFoundError("Neither 'pytorch_model.bin' nor 'model.safetensors' found in the specified path.")      
+        tokenizer = GPT2Tokenizer.from_pretrained("./models/gpt2-large") # Load Tokenizer
 
     # Configure the pad_token for text models
     if tokenizer:
