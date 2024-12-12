@@ -6,6 +6,7 @@ MODEL_LIST = {
     "gpt2": {"path": "openai-community/gpt2", "save_dir": "./models/gpt2"},
     "gpt2-medium": {"path": "openai-community/gpt2-medium", "save_dir": "./models/gpt2-medium"},
     "gpt2-persian": {"path": "flax-community/gpt2-medium-persian", "save_dir": "./models/gpt2-medium-persian"},
+    "gpt2-large": {"path": "openai-community/gpt2-large", "save_dir": "./models/gpt2-large"},
     "codegen": {"path": "Salesforce/codegen-350M-mono", "save_dir": "./models/codegen"}
 }
 
