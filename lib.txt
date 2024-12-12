@@ -6,3 +6,7 @@ numpy
 Pillow
 scikit-learn
 wandb
+pyarrow
+pandas
+chardet
+accelerate
