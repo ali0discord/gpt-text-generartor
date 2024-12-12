@@ -1,9 +1,9 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import AdamW
-from sklearn.metrics import f1_score
-from nltk.translate.bleu_score import sentence_bleu
 from model import load_model
+from database import fetch_all_inputs, clear_database  # مدیریت دیتابیس
+from datasets import load_dataset
 
 class TextDataset(Dataset):
     def __init__(self, texts, tokenizer, max_length=512):
@@ -23,23 +23,63 @@ class TextDataset(Dataset):
             max_length=self.max_length,
             return_tensors="pt"
         )
-
-        # Ensure attention_mask is included in the return
         attention_mask = encodings.attention_mask.squeeze(0)
-
-        # Return both input_ids and attention_mask
         return encodings.input_ids.squeeze(0), attention_mask
 
-def train_model_with_text(model_name, custom_text, epochs, batch_size):
-    model, tokenizer = load_model(model_name)
-
-    # Prepare dataset with custom text
+def train_model_with_text(selected_model, custom_text, epochs, batch_size):
+    """
+    آموزش مدل با متن سفارشی.
+    """
+    model, tokenizer = load_model(selected_model)
     dataset = TextDataset([custom_text], tokenizer)
     dataloader = DataLoader(dataset, batch_size=min(batch_size, len(dataset)), shuffle=True)
 
+    _train_model(model, tokenizer, dataloader, epochs, selected_model, "custom_text")
+
+def train_model_with_database(selected_model, epochs, batch_size):
+    """
+    آموزش مدل با داده‌های موجود در دیتابیس.
+    """
+    model, tokenizer = load_model(selected_model)
+    inputs_data = fetch_all_inputs()
+    texts = [input_text for input_text, model_name in inputs_data if model_name == selected_model]
+
+    if not texts:
+        print("Error: No data found in the database for the selected model.")
+        return
+
+    dataset = TextDataset(texts, tokenizer)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    _train_model(model, tokenizer, dataloader, epochs, selected_model, "database")
+    clear_database()
+
+def train_model_with_dataset(selected_model, epochs, batch_size, dataset_path):
+    """
+    آموزش مدل با فایل دیتاست آپلود‌شده.
+    """
+    model, tokenizer = load_model(selected_model)
+
+    # خواندن دیتاست
+    with open(dataset_path, "r", encoding="utf-8") as f:
+        texts = f.readlines()
+
+    if not texts:
+        print("Error: Dataset is empty.")
+        return
+
+    dataset = TextDataset(texts, tokenizer)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    _train_model(model, tokenizer, dataloader, epochs, selected_model, "dataset")
+
+def _train_model(model, tokenizer, dataloader, epochs, model_name, method):
+    """
+    منطق مشترک آموزش مدل.
+    """
     optimizer = AdamW(model.parameters(), lr=5e-5)
 
-    # Move model to GPU if available
+    # انتقال مدل به GPU در صورت وجود
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -51,40 +91,42 @@ def train_model_with_text(model_name, custom_text, epochs, batch_size):
             input_ids = input_ids.to(device)
             attention_mask = attention_mask.to(device)
 
-            # Forward pass
+            # محاسبه خروجی و خطا
             outputs = model(input_ids, attention_mask=attention_mask, labels=input_ids)
             loss = outputs.loss
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
 
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {total_loss / len(dataloader)}")
+        print(f"Epoch {epoch + 1}/{epochs}, Loss: {total_loss / len(dataloader)}")
 
-    # Save trained model
-    model.save_pretrained(f"trained_{model_name}_custom")
-    tokenizer.save_pretrained(f"trained_{model_name}_custom")
-    print(f"Model {model_name} trained with custom text and saved.")
+    # ذخیره مدل
+    save_path = f"trained_{model_name}_{method}"
+    model.save_pretrained(save_path)
+    tokenizer.save_pretrained(save_path)
+    print(f"Model {model_name} trained with {method} and saved to {save_path}.")
 
-def evaluate_model(model, tokenizer, input_texts, true_texts, max_length=50):
+def train_model_with_hf_dataset(selected_model, epochs, batch_size, dataset_name, split="train"):
     """
-    Evaluate the model using BLEU score and F1 score.
-    """
-    model.eval()
-
-    predicted_texts = []
+    آموزش مدل با استفاده از دیتاست‌های Hugging Face.
     
-    for input_text in input_texts:
-        inputs = tokenizer.encode(input_text, return_tensors="pt")
-        outputs = model.generate(inputs, max_length=max_length, num_return_sequences=1, pad_token_id=tokenizer.eos_token_id)
-        predicted_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        predicted_texts.append(predicted_text)
+    Args:
+        selected_model (str): نام مدل برای آموزش.
+        epochs (int): تعداد epochs.
+        batch_size (int): اندازه batch.
+        dataset_name (str): نام دیتاست در Hugging Face.
+        split (str): بخش دیتاست برای بارگذاری (train, test, validation).
+    """
+    model, tokenizer = load_model(selected_model)
 
-    # BLEU Score Calculation
-    bleu_scores = [sentence_bleu([true.split()], pred.split()) for true, pred in zip(true_texts, predicted_texts)]
-    avg_bleu_score = sum(bleu_scores) / len(bleu_scores)
+    # بارگذاری داده‌ها از Hugging Face
+    texts = load_dataset(dataset_name, split)
+    
+    if not texts:
+        print(f"Error: Dataset {dataset_name} ({split} split) is empty or invalid.")
+        return
 
-    # F1 Score Calculation (for simplicity, we compare exact matches)
-    f1_scores = [f1_score([true == pred], [1]) for true, pred in zip(true_texts, predicted_texts)]
-    avg_f1_score = sum(f1_scores) / len(f1_scores)
+    dataset = TextDataset(texts, tokenizer)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    return avg_bleu_score, avg_f1_score
+    _train_model(model, tokenizer, dataloader, epochs, selected_model, f"huggingface_{dataset_name}")
