@@ -21,6 +21,10 @@ def load_model(model_name):
         print("Loading CodeGen model...")
         model = CodeGenForCausalLM.from_pretrained("./models/codegen", device_map='cpu')
         tokenizer = AutoTokenizer.from_pretrained("./models/codegen")
+    elif model_name == "gpt2-large":
+        print("Loading GPT2 Large Model...")
+        model = GPT2LMHeadModel.from_pretrained("./models/gpt2-large")
+        tokenizer = GPT2Tokenizer.from_pretrained("./models/gpt2-large")
     else:
         raise ValueError(f"Unsupported model name: {model_name}")
 
