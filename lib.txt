@@ -10,3 +10,4 @@ pyarrow
 pandas
 chardet
 accelerate
+safetensors
