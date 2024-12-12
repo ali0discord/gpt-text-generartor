@@ -50,8 +50,8 @@ sudo apt install python3.8
 ### **کلون کردن**
 ابتدا مخزن پروژه رو کلون کنید
 ```bash
-git clone https://github.com/ali0discord/gpt-text-generator.git
-cd gpt-text-generator
+git clone https://github.com/ali0discord/gpt-tools.git
+cd gpt-tools
 ```
 ---
 ### **نصب کتابخانه ها**
