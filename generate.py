@@ -1,6 +1,6 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 
+seed = 42
 def generate_text(models, model_name, input_text, max_new_token, seed=None):
     selected_model = models[model_name]
     tokenizer = selected_model["tokenizer"]
